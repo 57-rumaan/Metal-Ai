@@ -1,0 +1,268 @@
+/* ==========================================================
+   OmniAI - style.css
+   Part 1 : Base Layout
+   ========================================================== */
+
+:root{
+  --bg:#0b1020;
+  --panel:#131a2b;
+  --panel-2:#1a2338;
+  --text:#eef2ff;
+  --muted:#a9b4d0;
+  --accent:#4f8cff;
+  --accent-hover:#3a78f0;
+  --border:#27314b;
+  --user:#2d6bff;
+  --assistant:#1d2740;
+  --success:#1dd75f;
+  --radius:18px;
+  --shadow:0 10px 30px rgba(0,0,0,.35);
+}
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+html,body{
+    width:100%;
+    height:100%;
+    font-family:Inter,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+}
+
+body{
+    overflow:hidden;
+}
+
+#loading{
+    position:fixed;
+    inset:0;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:16px;
+    background:var(--bg);
+    z-index:9999;
+}
+
+.loader{
+    width:60px;
+    height:60px;
+    border:5px solid rgba(255,255,255,.15);
+    border-top-color:var(--accent);
+    border-radius:50%;
+    animation:spin 1s linear infinite;
+}
+
+@keyframes spin{
+    to{
+        transform:rotate(360deg);
+    }
+}
+
+#app{
+    display:grid;
+    grid-template-columns:280px 1fr;
+    height:100vh;
+}
+
+/* Sidebar */
+
+#sidebar{
+    background:var(--panel);
+    border-right:1px solid var(--border);
+    display:flex;
+    flex-direction:column;
+    padding:20px;
+    gap:20px;
+}
+
+.logo{
+    font-size:26px;
+    font-weight:700;
+}
+
+#newChat{
+    width:100%;
+    border:none;
+    background:var(--accent);
+    color:#fff;
+    padding:14px;
+    border-radius:14px;
+    cursor:pointer;
+    font-size:15px;
+    transition:.25s;
+}
+
+#newChat:hover{
+    background:var(--accent-hover);
+}
+
+nav{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+}
+
+.nav{
+    background:none;
+    border:none;
+    color:var(--text);
+    padding:14px;
+    text-align:left;
+    border-radius:12px;
+    cursor:pointer;
+    transition:.25s;
+}
+
+.nav:hover,
+.nav.active{
+    background:var(--panel-2);
+}
+
+/* Main */
+
+main{
+    display:flex;
+    flex-direction:column;
+    height:100vh;
+}
+
+/* Header */
+
+header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:18px 24px;
+    border-bottom:1px solid var(--border);
+    background:rgba(19,26,43,.85);
+    backdrop-filter:blur(12px);
+}
+
+.status{
+    color:var(--success);
+    font-size:14px;
+}
+
+/* Messages */
+
+#messages{
+    flex:1;
+    overflow:auto;
+    padding:30px;
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+}
+
+.assistant,
+.user{
+    max-width:80%;
+    padding:16px;
+    border-radius:16px;
+    line-height:1.6;
+    box-shadow:var(--shadow);
+}
+
+.assistant{
+    background:var(--assistant);
+    align-self:flex-start;
+}
+
+.user{
+    background:var(--user);
+    align-self:flex-end;
+}
+
+/* Footer */
+
+footer{
+    border-top:1px solid var(--border);
+    padding:18px;
+    display:flex;
+    gap:10px;
+    align-items:flex-end;
+    background:var(--panel);
+}
+
+footer button{
+    width:48px;
+    height:48px;
+    border:none;
+    border-radius:12px;
+    cursor:pointer;
+    background:var(--panel-2);
+    color:white;
+    font-size:18px;
+}
+
+#send{
+    background:var(--accent);
+}
+
+#send:hover{
+    background:var(--accent-hover);
+}
+
+textarea{
+    flex:1;
+    resize:none;
+    min-height:50px;
+    max-height:180px;
+    border:none;
+    outline:none;
+    border-radius:14px;
+    background:var(--panel-2);
+    color:white;
+    padding:14px;
+    font-size:15px;
+}
+
+/* Responsive */
+
+@media(max-width:900px){
+
+#app{
+
+grid-template-columns:1fr;
+
+}
+
+#sidebar{
+
+position:fixed;
+
+left:-300px;
+
+top:0;
+
+bottom:0;
+
+width:280px;
+
+z-index:100;
+
+transition:.3s;
+
+}
+
+#sidebar.show{
+
+left:0;
+
+}
+
+.assistant,
+.user{
+
+max-width:100%;
+
+}
+
+}
+
