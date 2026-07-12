@@ -1,0 +1,1756 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Apna AI</title>
+<style>
+  :root {
+    --bg: #12141c;
+    --bg-elevated: #1b1e29;
+    --ink: #eef0f6;
+    --ink-dim: #9096ab;
+    --accent: #e8a33d;
+    --accent-dim: #6b5228;
+    --user-bubble: #2a3142;
+    --ai-bubble: #1e2230;
+    --line: #2a2e3d;
+    --danger: #d9615a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    overflow: hidden;
+  }
+
+  @font-face {
+    font-family: 'Display';
+  }
+
+  #app {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    max-width: 720px;
+    margin: 0 auto;
+    position: relative;
+  }
+
+  /* ---------- Header ---------- */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--line);
+    background: var(--bg);
+    z-index: 5;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .brand-mark {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--accent), #b5751f);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    color: #1a1206;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+
+  .brand-text h1 {
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+  }
+
+  .brand-text p {
+    font-size: 11px;
+    color: var(--ink-dim);
+    margin-top: 1px;
+  }
+
+  .icon-btn {
+    background: none;
+    border: none;
+    color: var(--ink-dim);
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 15px;
+    flex-shrink: 0;
+  }
+  .icon-btn:active { background: var(--bg-elevated); }
+  .icon-btn.active-mode { background: var(--accent-dim); color: var(--accent); }
+
+  /* ---------- Chat area ---------- */
+  #chat {
+    flex: 1;
+    overflow-y: auto;
+    padding: 18px 16px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .empty-state {
+    margin: auto;
+    text-align: center;
+    color: var(--ink-dim);
+    padding: 0 30px;
+  }
+  .empty-state .glyph {
+    font-size: 40px;
+    margin-bottom: 12px;
+    opacity: 0.7;
+  }
+  .empty-state h2 {
+    color: var(--ink);
+    font-size: 18px;
+    margin-bottom: 6px;
+    font-weight: 600;
+  }
+  .empty-state p { font-size: 13px; line-height: 1.5; }
+
+  .row { display: flex; }
+  .row.user { justify-content: flex-end; }
+  .row.ai { justify-content: flex-start; }
+
+  .bubble {
+    max-width: 82%;
+    padding: 11px 14px;
+    border-radius: 16px;
+    font-size: 14.5px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+  .row.user .bubble {
+    background: var(--user-bubble);
+    border-bottom-right-radius: 4px;
+  }
+  .row.ai .bubble {
+    background: var(--ai-bubble);
+    border: 1px solid var(--line);
+    border-bottom-left-radius: 4px;
+  }
+
+  .typing-dots {
+    display: flex;
+    gap: 4px;
+    padding: 6px 2px;
+  }
+  .typing-dots span {
+    width: 6px; height: 6px;
+    background: var(--ink-dim);
+    border-radius: 50%;
+    animation: bounce 1.2s infinite ease-in-out;
+  }
+  .typing-dots span:nth-child(2) { animation-delay: 0.15s; }
+  .typing-dots span:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes bounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+    30% { transform: translateY(-4px); opacity: 1; }
+  }
+
+  .ai-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 6px;
+  }
+  .mini-btn {
+    background: none;
+    border: 1px solid var(--line);
+    color: var(--ink-dim);
+    font-size: 11px;
+    padding: 4px 9px;
+    border-radius: 20px;
+    cursor: pointer;
+  }
+  .mini-btn:active { background: var(--bg-elevated); }
+
+  /* ---------- Input bar ---------- */
+  #inputBar {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    padding: 10px 12px;
+    padding-bottom: max(10px, env(safe-area-inset-bottom));
+    border-top: 1px solid var(--line);
+    background: var(--bg);
+  }
+
+  #textInput {
+    flex: 1;
+    background: var(--bg-elevated);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    border-radius: 20px;
+    padding: 11px 16px;
+    font-size: 14.5px;
+    resize: none;
+    max-height: 110px;
+    outline: none;
+    font-family: inherit;
+  }
+  #textInput:focus { border-color: var(--accent-dim); }
+
+  .round-btn {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    border: none;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+  #micBtn {
+    background: var(--bg-elevated);
+    color: var(--ink-dim);
+    border: 1px solid var(--line);
+  }
+  #micBtn.recording {
+    background: var(--danger);
+    color: white;
+    animation: pulse 1s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(217,97,90,0.5); }
+    50% { box-shadow: 0 0 0 8px rgba(217,97,90,0); }
+  }
+  .file-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--ai-bubble);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 14px 16px;
+    text-decoration: none;
+    max-width: 82%;
+    cursor: pointer;
+  }
+  .file-card:active { background: var(--bg-elevated); }
+  .file-card-icon {
+    width: 40px;
+    height: 40px;
+    background: var(--accent-dim);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  .file-card-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .file-card-name {
+    color: var(--ink);
+    font-size: 14px;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .file-card-sub {
+    color: var(--ink-dim);
+    font-size: 12px;
+    margin-top: 2px;
+  }
+  .file-card-arrow {
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+
+  .attach-menu {
+    position: absolute;
+    bottom: 68px;
+    left: 12px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    z-index: 15;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  }
+  .attach-menu button {
+    background: none;
+    border: none;
+    color: var(--ink);
+    font-size: 14px;
+    padding: 10px 14px;
+    text-align: left;
+    border-radius: 8px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .attach-menu button:active { background: var(--bg); }
+
+  #attachBtn {
+    background: var(--bg-elevated);
+    color: var(--ink-dim);
+    border: 1px solid var(--line);
+    font-size: 16px;
+  }
+
+  .attachment-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 8px 12px;
+    margin: 0 12px 8px;
+    font-size: 13px;
+    color: var(--ink);
+  }
+  .attachment-chip span:nth-child(2) {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .chip-remove {
+    background: none;
+    border: none;
+    color: var(--ink-dim);
+    font-size: 14px;
+    cursor: pointer;
+    padding: 2px 6px;
+  }
+
+  #imgBtn {
+    background: var(--bg-elevated);
+    color: var(--ink-dim);
+    border: 1px solid var(--line);
+    font-size: 16px;
+  }
+  #sendBtn {
+    background: var(--accent);
+    color: #1a1206;
+  }
+  #sendBtn:disabled { opacity: 0.4; }
+
+  /* ---------- Call overlay ---------- */
+  .call-overlay {
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(circle at 50% 30%, #1c1f2c, #0a0b10);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    z-index: 30;
+    overflow: hidden;
+  }
+  .call-overlay.open { display: flex; }
+
+  .fullscreen-video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: none;
+    z-index: 1;
+  }
+  .call-overlay.video-mode .fullscreen-video { display: block; }
+
+  .call-top {
+    text-align: center;
+    margin-top: max(30px, env(safe-area-inset-top));
+    z-index: 5;
+    position: relative;
+  }
+  .call-top p:first-child {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 6px;
+    text-shadow: 0 1px 6px rgba(0,0,0,0.6);
+  }
+  #callStatus {
+    font-size: 13px;
+    color: var(--ink-dim);
+    text-shadow: 0 1px 6px rgba(0,0,0,0.6);
+  }
+
+  .avatar-wrap {
+    position: relative;
+    width: 160px;
+    height: 160px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: auto 0;
+    flex-shrink: 0;
+    z-index: 5;
+  }
+
+  .call-overlay.video-mode .avatar-wrap {
+    position: absolute;
+    bottom: 130px;
+    right: 20px;
+    width: 96px;
+    height: 96px;
+    margin: 0;
+    background: var(--bg-elevated);
+    border-radius: 16px;
+    border: 2px solid rgba(255,255,255,0.15);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  }
+  .call-overlay.video-mode .avatar-ring { display: none; }
+
+  .avatar-orb {
+    width: 130px;
+    height: 130px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #f3c072, var(--accent) 60%, #a3661c 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 34px;
+    font-weight: 700;
+    color: #1a1206;
+    box-shadow: 0 0 40px rgba(232,163,61,0.35);
+    z-index: 2;
+    transition: transform 0.3s ease;
+  }
+  .call-overlay.video-mode .avatar-orb {
+    width: 76px;
+    height: 76px;
+    border-radius: 12px;
+    font-size: 22px;
+    box-shadow: none;
+  }
+  .avatar-orb.speaking {
+    animation: speakPulse 0.6s infinite ease-in-out;
+  }
+  @keyframes speakPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.06); }
+  }
+
+  .avatar-ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 2px solid var(--accent-dim);
+    opacity: 0;
+  }
+  .r1 { width: 160px; height: 160px; }
+  .r2 { width: 190px; height: 190px; }
+
+  .avatar-wrap.listening .avatar-ring {
+    animation: ringExpand 1.6s infinite ease-out;
+  }
+  .avatar-wrap.listening .r2 { animation-delay: 0.4s; }
+  @keyframes ringExpand {
+    0% { transform: scale(0.85); opacity: 0.6; }
+    100% { transform: scale(1.15); opacity: 0; }
+  }
+
+  .call-transcript {
+    color: var(--ink);
+    font-size: 13.5px;
+    text-align: center;
+    max-width: 320px;
+    line-height: 1.6;
+    min-height: 60px;
+    margin: 10px auto 0;
+    z-index: 5;
+    position: relative;
+    text-shadow: 0 1px 8px rgba(0,0,0,0.7);
+  }
+  .call-overlay.video-mode .call-transcript {
+    position: absolute;
+    bottom: 240px;
+    left: 20px;
+    right: 20px;
+    max-width: none;
+  }
+
+  .call-controls {
+    padding: 30px 0 max(30px, env(safe-area-inset-bottom));
+    z-index: 5;
+    position: relative;
+  }
+  .call-overlay.video-mode .call-controls {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+  }
+  .call-btn {
+    width: 62px;
+    height: 62px;
+    border-radius: 50%;
+    border: none;
+    font-size: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+  .end-btn {
+    background: var(--danger);
+    color: white;
+  }
+
+  /* ---------- Settings panel ---------- */
+  #settingsOverlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    display: none;
+    z-index: 20;
+  }
+  #settingsOverlay.open { display: block; }
+
+  #settingsPanel {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    background: var(--bg-elevated);
+    border-radius: 20px 20px 0 0;
+    padding: 20px 18px;
+    padding-bottom: max(20px, env(safe-area-inset-bottom));
+    max-height: 82vh;
+    overflow-y: auto;
+    border-top: 1px solid var(--line);
+  }
+
+  #settingsPanel h3 {
+    font-size: 17px;
+    margin-bottom: 4px;
+  }
+  #settingsPanel .sub {
+    font-size: 12px;
+    color: var(--ink-dim);
+    margin-bottom: 16px;
+  }
+
+  .field-label {
+    font-size: 12px;
+    color: var(--ink-dim);
+    margin-bottom: 6px;
+    display: block;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  #apiKeyInput, #systemPromptInput {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    border-radius: 10px;
+    padding: 11px 13px;
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+    margin-bottom: 16px;
+  }
+  #systemPromptInput {
+    resize: vertical;
+    min-height: 100px;
+    line-height: 1.5;
+  }
+  #apiKeyInput:focus, #systemPromptInput:focus { border-color: var(--accent-dim); }
+
+  .settings-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 4px;
+  }
+
+  .btn-primary, .btn-secondary {
+    flex: 1;
+    padding: 12px;
+    border-radius: 12px;
+    border: none;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn-primary { background: var(--accent); color: #1a1206; }
+  .btn-secondary { background: transparent; border: 1px solid var(--line); color: var(--ink); }
+
+  .help-note {
+    font-size: 11.5px;
+    color: var(--ink-dim);
+    line-height: 1.6;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-bottom: 16px;
+  }
+  .help-note a { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <header>
+    <div class="brand">
+      <div class="brand-mark">AI</div>
+      <div class="brand-text">
+        <h1>Apna AI</h1>
+        <p id="statusLine">Qwen2.5 model — set up karne ke liye ⚙️ dabao</p>
+      </div>
+    </div>
+    <div style="display:flex; align-items:center; gap:2px; overflow-x:auto; max-width:calc(100vw - 90px);">
+      <button class="icon-btn" onclick="openCall('voice')" title="Voice Call">📞</button>
+      <button class="icon-btn" onclick="openCall('video')" title="Video Call">🎥</button>
+      <button class="icon-btn" id="medicalBtn" onclick="toggleMedicalMode()" title="Medical Mode">🏥</button>
+      <button class="icon-btn" onclick="insertDataEntryTemplate()" title="Data Entry">🗂️</button>
+      <button class="icon-btn" onclick="openAnimationPrompt()" title="Animation Generator">🎞️</button>
+      <button class="icon-btn" onclick="openVideoGenPrompt()" title="Video Generator">🎬</button>
+      <button class="icon-btn" onclick="openSettings()" title="Settings">⚙️</button>
+    </div>
+  </header>
+
+  <div id="chat">
+    <div class="empty-state" id="emptyState">
+      <div class="glyph">💬</div>
+      <h2>Hey there, ready when you are.</h2>
+      <p>Pehle ⚙️ settings mein apni API key aur rules set karo, phir neeche message likho, 🎤 dabao bolke poochne ke liye, 🎨 dabao photo banwane ke liye, ya 📎 dabao koi photo/video/audio/code file bhejne ke liye.</p>
+    </div>
+  </div>
+
+  <div id="attachmentChip" class="attachment-chip" style="display:none;">
+    <span id="attachmentChipIcon">📄</span>
+    <span id="attachmentChipName"></span>
+    <button onclick="clearAttachment()" class="chip-remove">✕</button>
+  </div>
+
+  <div id="attachMenu" class="attach-menu" style="display:none;">
+    <button onclick="pickFile('*/*', null)">📁 Koi bhi File</button>
+    <button onclick="pickFile('image/*', 'image')">🖼️ Photo</button>
+    <button onclick="pickFile('video/*', 'video')">🎬 Video</button>
+    <button onclick="pickFile('audio/*', 'audio')">🎵 Audio</button>
+    <button onclick="pickFile('.js,.jsx,.ts,.tsx,.py,.java,.c,.cpp,.h,.cs,.css,.html,.json,.xml,.csv,.rb,.go,.php,.kt,.swift,.txt,.md', 'code')">💻 Coding File</button>
+  </div>
+
+  <div id="inputBar">
+    <input type="file" id="fileInput" style="display:none" onchange="handleFileSelect(event)">
+    <button class="round-btn" id="attachBtn" onclick="toggleAttachMenu()" title="File attach karo">📎</button>
+    <button class="round-btn" id="micBtn" onclick="toggleMic()" title="Bolke poocho">🎤</button>
+    <textarea id="textInput" rows="1" placeholder="Message likho..." onkeydown="handleKeyDown(event)" oninput="autoGrow(this)"></textarea>
+    <button class="round-btn" id="imgBtn" onclick="generateImage()" title="Photo banao">🎨</button>
+    <button class="round-btn" id="sendBtn" onclick="sendMessage()" title="Bhejo">➤</button>
+  </div>
+
+  <div id="callOverlay" class="call-overlay">
+    <video id="callVideoFeed" autoplay muted playsinline class="fullscreen-video"></video>
+    <canvas id="callCanvas" style="display:none;"></canvas>
+
+    <div class="call-top">
+      <p id="callModeLabel">Voice Call</p>
+      <p id="callStatus">Connecting...</p>
+    </div>
+
+    <div class="avatar-wrap" id="avatarWrap">
+      <div class="avatar-ring r1"></div>
+      <div class="avatar-ring r2"></div>
+      <div class="avatar-orb" id="avatarOrb">AI</div>
+    </div>
+
+    <p id="callTranscript" class="call-transcript"></p>
+
+    <div class="call-controls">
+      <button class="call-btn end-btn" onclick="endCall()" title="Call Khatam Karo">📵</button>
+    </div>
+  </div>
+
+  <div id="settingsOverlay" onclick="closeSettingsOutside(event)">
+    <div id="settingsPanel">
+      <h3>Settings</h3>
+      <p class="sub">Apni API key aur AI ke rules yahan set karo</p>
+
+      <div class="help-note">
+        Hugging Face token 2 steps mein banao:<br>
+        1) <a href="https://huggingface.co/settings/tokens" target="_blank">huggingface.co/settings/tokens</a> par jao, "Create new token" dabao, "Make calls to Inference Providers" permission ON karo, baaki sab OFF rakho.<br>
+        2) Token copy karke neeche paste karo.
+      </div>
+
+      <label class="field-label">Hugging Face Token</label>
+      <input id="apiKeyInput" type="password" placeholder="hf_... yahan paste karo">
+
+      <label class="field-label">Voice Language (Mic aur Awaaz ke liye)</label>
+      <select id="voiceLangSelect" style="width:100%; background: var(--bg); border: 1px solid var(--line); color: var(--ink); border-radius: 10px; padding: 11px 13px; font-size: 14px; font-family: inherit; outline: none; margin-bottom: 16px;">
+        <option value="en-US">English (default)</option>
+        <option value="ur-PK">Urdu</option>
+        <option value="hi-IN">Hindi</option>
+        <option value="ar-SA">Arabic</option>
+        <option value="fr-FR">French</option>
+        <option value="es-ES">Spanish</option>
+        <option value="de-DE">German</option>
+        <option value="tr-TR">Turkish</option>
+        <option value="fa-IR">Persian/Farsi</option>
+        <option value="zh-CN">Chinese</option>
+        <option value="ru-RU">Russian</option>
+        <option value="bn-BD">Bengali</option>
+        <option value="pa-IN">Punjabi</option>
+        <option value="id-ID">Indonesian</option>
+        <option value="pt-PT">Portuguese</option>
+        <option value="ja-JP">Japanese</option>
+      </select>
+      <p style="font-size:11px; color: var(--ink-dim); margin-top:-10px; margin-bottom:16px;">Note: mic ek time par ek language sunta hai — jis language mein bolna/sunna hai wo yahan select karo. Typing ke liye AI khud hi kisi bhi language ko samajh leta hai.</p>
+
+      <label class="field-label">AI ke Rules (System Prompt)</label>
+      <textarea id="systemPromptInput">You are a helpful multilingual assistant. STRICT RULE: For every single message, detect the language the user just wrote in, and reply ONLY in that exact same language. Never mix languages in one reply. If the user writes in English, reply fully in English. If the user writes in Urdu, reply fully in Urdu. If they switch languages mid-conversation, immediately switch your reply to match. Default to English only if no language is detectable. Be clear, polite, and helpful. For medical topics, always advise the user to consult a doctor.</textarea>
+
+      <label class="field-label">Awaaz mein jawab (Text-to-Speech)</label>
+      <div style="margin-bottom:16px;">
+        <label style="font-size:13px; display:flex; align-items:center; gap:8px;">
+          <input type="checkbox" id="ttsToggle" style="width:16px; height:16px;">
+          Har AI reply ko bol kar bhi sunao
+        </label>
+      </div>
+
+      <div class="settings-actions">
+        <button class="btn-secondary" onclick="closeSettings()">Cancel</button>
+        <button class="btn-primary" onclick="saveSettings()">Save Karo</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script type="module">
+  // Reliable image generation using official Hugging Face SDK
+  import { InferenceClient } from "https://esm.sh/@huggingface/inference@4.13.22";
+
+  window.hfGenerateImage = async function(prompt, token) {
+    const client = new InferenceClient(token);
+    const imageBlob = await client.textToImage({
+      model: "black-forest-labs/FLUX.1-dev",
+      inputs: prompt,
+      provider: "fal-ai"
+    });
+    return imageBlob;
+  };
+
+  window.hfGenerateVideo = async function(prompt, token) {
+    const client = new InferenceClient(token);
+    const videoBlob = await client.textToVideo({
+      model: "Wan-AI/Wan2.1-T2V-1.3B",
+      inputs: prompt,
+      provider: "fal-ai"
+    });
+    return videoBlob;
+  };
+</script>
+<script>
+  // ---------------- State ----------------
+  let apiKey = localStorage.getItem('apna_ai_key') || '';
+  let systemPrompt = localStorage.getItem('apna_ai_prompt') || document.getElementById('systemPromptInput').value;
+  let ttsEnabled = localStorage.getItem('apna_ai_tts') === 'true';
+  let voiceLang = localStorage.getItem('apna_ai_voice_lang') || 'en-US';
+  let conversationHistory = []; // {role, text}
+  let isRecording = false;
+  let recognition = null;
+
+  // Load saved settings into UI
+  document.getElementById('apiKeyInput').value = apiKey;
+  document.getElementById('systemPromptInput').value = systemPrompt;
+  document.getElementById('ttsToggle').checked = ttsEnabled;
+  document.getElementById('voiceLangSelect').value = voiceLang;
+  updateStatusLine();
+
+  function updateStatusLine() {
+    document.getElementById('statusLine').textContent = apiKey
+      ? 'Ready — Qwen2.5 (Hugging Face) se connected'
+      : 'Set up karne ke liye ⚙️ dabao';
+  }
+
+  // ---------------- Settings panel ----------------
+  function openSettings() {
+    document.getElementById('settingsOverlay').classList.add('open');
+  }
+  function closeSettings() {
+    document.getElementById('settingsOverlay').classList.remove('open');
+  }
+  function closeSettingsOutside(e) {
+    if (e.target.id === 'settingsOverlay') closeSettings();
+  }
+  function saveSettings() {
+    apiKey = document.getElementById('apiKeyInput').value.trim();
+    systemPrompt = document.getElementById('systemPromptInput').value.trim();
+    ttsEnabled = document.getElementById('ttsToggle').checked;
+    voiceLang = document.getElementById('voiceLangSelect').value;
+
+    localStorage.setItem('apna_ai_key', apiKey);
+    localStorage.setItem('apna_ai_prompt', systemPrompt);
+    localStorage.setItem('apna_ai_tts', ttsEnabled);
+    localStorage.setItem('apna_ai_voice_lang', voiceLang);
+
+    updateStatusLine();
+    closeSettings();
+  }
+
+  // ---------------- Chat UI helpers ----------------
+  function autoGrow(el) {
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 110) + 'px';
+  }
+
+  function handleKeyDown(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  }
+
+  function addBubble(role, text) {
+    const emptyState = document.getElementById('emptyState');
+    if (emptyState) emptyState.remove();
+
+    const chat = document.getElementById('chat');
+    const row = document.createElement('div');
+    row.className = 'row ' + role;
+
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    bubble.textContent = text;
+    row.appendChild(bubble);
+
+    if (role === 'ai') {
+      const actions = document.createElement('div');
+      actions.className = 'ai-actions';
+      const speakBtn = document.createElement('button');
+      speakBtn.className = 'mini-btn';
+      speakBtn.textContent = '🔊 Suno';
+      speakBtn.onclick = () => speakText(text);
+      actions.appendChild(speakBtn);
+      row.appendChild(actions);
+    }
+
+    chat.appendChild(row);
+    chat.scrollTop = chat.scrollHeight;
+    return bubble;
+  }
+
+  function addImageBubble(imageUrl) {
+    const emptyState = document.getElementById('emptyState');
+    if (emptyState) emptyState.remove();
+
+    const chat = document.getElementById('chat');
+    const row = document.createElement('div');
+    row.className = 'row ai';
+
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    bubble.style.padding = '6px';
+
+    const img = document.createElement('img');
+    img.src = imageUrl;
+    img.style.width = '100%';
+    img.style.borderRadius = '12px';
+    img.style.display = 'block';
+    bubble.appendChild(img);
+
+    row.appendChild(bubble);
+    chat.appendChild(row);
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  async function generateImage(promptOverride) {
+    const input = document.getElementById('textInput');
+    const prompt = promptOverride || input.value.trim();
+    if (!prompt) {
+      alert('Pehle box mein likho ki kaisi photo chahiye, phir 🎨 dabao.');
+      return;
+    }
+
+    if (!apiKey) {
+      openSettings();
+      return;
+    }
+
+    if (!promptOverride) {
+      addBubble('user', '🎨 ' + prompt);
+      input.value = '';
+      autoGrow(input);
+    }
+
+    addTypingIndicator();
+    document.getElementById('imgBtn').disabled = true;
+    document.getElementById('sendBtn').disabled = true;
+
+    try {
+      if (!window.hfGenerateImage) {
+        throw new Error('Image module abhi load ho raha hai, thodi der mein phir try karo.');
+      }
+      const blob = await window.hfGenerateImage(prompt, apiKey);
+      removeTypingIndicator();
+      const imageUrl = URL.createObjectURL(blob);
+      addImageBubble(imageUrl);
+    } catch (err) {
+      removeTypingIndicator();
+      addBubble('ai', '⚠️ Image error: ' + err.message);
+    } finally {
+      document.getElementById('imgBtn').disabled = false;
+      document.getElementById('sendBtn').disabled = false;
+    }
+  }
+
+  // ---------------- Auto-detect if a chat message is actually an image request ----------------
+  function isImageIntent(text) {
+    const t = text.toLowerCase();
+
+    const actionWords = [
+      'generate', 'create', 'make', 'draw', 'design', 'show me',
+      'bana', 'bnao', 'banado', 'banwa', 'draw kar'
+    ];
+    const nounWords = [
+      'image', 'picture', 'pic ', 'pic.', 'pic,', 'photo', 'painting',
+      'illustration', 'artwork', 'wallpaper', 'poster', 'drawing',
+      'tasveer', 'tasvir'
+    ];
+
+    const hasAction = actionWords.some(w => t.includes(w));
+    const hasNoun = nounWords.some(w => t.includes(w)) || t.trim().endsWith('pic');
+
+    if (hasAction && hasNoun) return true;
+
+    // Words that alone strongly imply an image request
+    const strongWords = ['draw ', 'sketch ', 'illustrate '];
+    if (strongWords.some(w => t.includes(w))) return true;
+
+    // Direct short forms like "cat pic", "pic of a cat", "a picture of..."
+    if (/\b(pic|photo|image|picture)s?\s+of\b/i.test(text)) return true;
+    if (/\bof\s+a\b.*\b(pic|photo|image|picture)/i.test(text)) return true;
+
+    return false;
+  }
+  function addTypingIndicator() {
+    const chat = document.getElementById('chat');
+    const row = document.createElement('div');
+    row.className = 'row ai';
+    row.id = 'typingRow';
+    row.innerHTML = '<div class="bubble"><div class="typing-dots"><span></span><span></span><span></span></div></div>';
+    chat.appendChild(row);
+    chat.scrollTop = chat.scrollHeight;
+  }
+  function removeTypingIndicator() {
+    const row = document.getElementById('typingRow');
+    if (row) row.remove();
+  }
+
+  // ---------------- Send message / Gemini API ----------------
+  async function sendMessage() {
+    const input = document.getElementById('textInput');
+    const text = input.value.trim();
+
+    if (!text && !pendingAttachment) return;
+
+    if (!apiKey) {
+      openSettings();
+      return;
+    }
+
+    // Agar koi file attach ki hui hai, usko handle karo
+    if (pendingAttachment) {
+      const attachment = pendingAttachment;
+      clearAttachment();
+      input.value = '';
+      autoGrow(input);
+
+      if (attachment.kind === 'image' || attachment.kind === 'video') {
+        const caption = text || 'Ye kya hai? Isके baare mein batao.';
+        addImageBubbleUser(attachment.dataUrl, caption);
+        addTypingIndicator();
+        document.getElementById('sendBtn').disabled = true;
+        try {
+          const reply = await callVisionModel(caption, attachment.dataUrl);
+          removeTypingIndicator();
+          addBubble('ai', reply);
+          if (ttsEnabled) speakText(reply);
+        } catch (err) {
+          removeTypingIndicator();
+          addBubble('ai', '⚠️ Error: ' + err.message);
+        } finally {
+          document.getElementById('sendBtn').disabled = false;
+        }
+        return;
+      }
+
+      if (attachment.kind === 'audio') {
+        addBubble('user', '🎵 ' + attachment.name + (text ? '\n' + text : ''));
+        addTypingIndicator();
+        document.getElementById('sendBtn').disabled = true;
+        try {
+          setStatusTemporary('Audio sun raha hoon...');
+          const transcript = await transcribeAudio(attachment.blob);
+          const combinedText = (text ? text + '\n\n' : '') + 'Audio mein ye bola gaya: "' + transcript + '"';
+          conversationHistory.push({ role: 'user', text: combinedText });
+          const reply = await callLlama();
+          removeTypingIndicator();
+          addBubble('ai', reply);
+          conversationHistory.push({ role: 'model', text: reply });
+          if (ttsEnabled) speakText(reply);
+        } catch (err) {
+          removeTypingIndicator();
+          addBubble('ai', '⚠️ Error: ' + err.message);
+        } finally {
+          document.getElementById('sendBtn').disabled = false;
+        }
+        return;
+      }
+
+      if (attachment.kind === 'code') {
+        const caption = text || 'Is file ko analyze karo aur batao ye kya karti hai.';
+        addBubble('user', '📄 ' + attachment.name + '\n' + caption);
+        const combinedText = caption + '\n\nFile: ' + attachment.name + '\n```\n' + attachment.text.slice(0, 12000) + '\n```' +
+          '\n\nAgar tumhe file edit/fix karne ko kaha gaya hai, to reply mein sirf ek chhota explanation do (1-2 lines), aur uske baad poori edited file ka COMPLETE content ek single code block ke andar do (```` ``` ````se shuru aur khatam), taaki file directly download ho sake. Partial code mat dena, poori file dena.';
+        conversationHistory.push({ role: 'user', text: combinedText });
+        addTypingIndicator();
+        document.getElementById('sendBtn').disabled = true;
+        try {
+          const reply = await callLlama();
+          removeTypingIndicator();
+          conversationHistory.push({ role: 'model', text: reply });
+
+          // Reply se code block nikal ke alag file card banao, chat mein sirf explanation dikhao
+          const codeMatches = [...reply.matchAll(/```[a-zA-Z0-9]*\n?([\s\S]*?)```/g)];
+          let displayText = reply;
+          let extractedCode = null;
+
+          if (codeMatches.length > 0) {
+            let longest = codeMatches[0];
+            for (const m of codeMatches) {
+              if (m[1].length > longest[1].length) longest = m;
+            }
+            extractedCode = longest[1];
+            displayText = reply.replace(longest[0], '').trim();
+            if (!displayText) displayText = 'File edit ho gayi ✅ Neeche se download kar lo.';
+          }
+
+          addBubble('ai', displayText);
+          if (ttsEnabled) speakText(displayText);
+          if (extractedCode) {
+            addFileDownloadCard(extractedCode, attachment.name);
+          }
+        } catch (err) {
+          removeTypingIndicator();
+          addBubble('ai', '⚠️ Error: ' + err.message);
+        } finally {
+          document.getElementById('sendBtn').disabled = false;
+        }
+        return;
+      }
+    }
+
+    // Agar message image banane ki request lagta hai, seedha image generate karo
+    if (isImageIntent(text)) {
+      addBubble('user', text);
+      input.value = '';
+      autoGrow(input);
+      generateImage(text);
+      return;
+    }
+
+    addBubble('user', text);
+    conversationHistory.push({ role: 'user', text });
+    input.value = '';
+    autoGrow(input);
+
+    addTypingIndicator();
+    document.getElementById('sendBtn').disabled = true;
+
+    try {
+      const reply = await callLlama();
+      removeTypingIndicator();
+      addBubble('ai', reply);
+      conversationHistory.push({ role: 'model', text: reply });
+      if (ttsEnabled) speakText(reply);
+    } catch (err) {
+      removeTypingIndicator();
+      addBubble('ai', '⚠️ Error: ' + err.message);
+    } finally {
+      document.getElementById('sendBtn').disabled = false;
+    }
+  }
+
+  function setStatusTemporary(text) {
+    document.getElementById('statusLine').textContent = text;
+    setTimeout(updateStatusLine, 4000);
+  }
+
+  // ---------------- File Attachment Handling ----------------
+  let pendingAttachment = null;
+
+  function toggleAttachMenu() {
+    const menu = document.getElementById('attachMenu');
+    menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
+  }
+
+  function pickFile(acceptTypes, hintKind) {
+    document.getElementById('attachMenu').style.display = 'none';
+    const fileInput = document.getElementById('fileInput');
+    fileInput.accept = acceptTypes;
+    fileInput.dataset.hintKind = hintKind || '';
+    fileInput.click();
+  }
+
+  function addFileDownloadCard(codeContent, originalFileName) {
+    const emptyState = document.getElementById('emptyState');
+    if (emptyState) emptyState.remove();
+
+    const chat = document.getElementById('chat');
+    const row = document.createElement('div');
+    row.className = 'row ai';
+
+    const sizeKb = (new Blob([codeContent]).size / 1024).toFixed(1);
+    const blob = new Blob([codeContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+
+    const card = document.createElement('a');
+    card.href = url;
+    card.download = originalFileName;
+    card.className = 'file-card';
+
+    const icon = document.createElement('div');
+    icon.className = 'file-card-icon';
+    icon.textContent = '📄';
+
+    const info = document.createElement('div');
+    info.className = 'file-card-info';
+
+    const nameEl = document.createElement('div');
+    nameEl.className = 'file-card-name';
+    nameEl.textContent = originalFileName;
+
+    const subEl = document.createElement('div');
+    subEl.className = 'file-card-sub';
+    subEl.textContent = 'Tap to download • ' + sizeKb + ' KB';
+
+    info.appendChild(nameEl);
+    info.appendChild(subEl);
+
+    const arrow = document.createElement('div');
+    arrow.className = 'file-card-arrow';
+    arrow.textContent = '⬇️';
+
+    card.appendChild(icon);
+    card.appendChild(info);
+    card.appendChild(arrow);
+
+    row.appendChild(card);
+    chat.appendChild(row);
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  function handleFileSelect(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        pendingAttachment = { kind: 'image', name: file.name, dataUrl: reader.result };
+        showAttachmentChip(file.name, '🖼️');
+      };
+      reader.readAsDataURL(file);
+    } else if (file.type.startsWith('video/')) {
+      extractVideoFrame(file).then(dataUrl => {
+        pendingAttachment = { kind: 'video', name: file.name, dataUrl: dataUrl };
+        showAttachmentChip(file.name + ' (video ka pehla frame check hoga)', '🎬');
+      }).catch(() => {
+        alert('Video read nahi ho payi.');
+      });
+    } else if (file.type.startsWith('audio/')) {
+      pendingAttachment = { kind: 'audio', name: file.name, blob: file };
+      showAttachmentChip(file.name, '🎵');
+    } else {
+      const reader = new FileReader();
+      reader.onload = () => {
+        pendingAttachment = { kind: 'code', name: file.name, text: reader.result };
+        showAttachmentChip(file.name, '📄');
+      };
+      reader.readAsText(file);
+    }
+
+    event.target.value = '';
+  }
+
+  function extractVideoFrame(file) {
+    return new Promise((resolve, reject) => {
+      const video = document.createElement('video');
+      video.src = URL.createObjectURL(file);
+      video.muted = true;
+      video.playsInline = true;
+      video.onloadeddata = () => {
+        video.currentTime = Math.min(0.5, (video.duration || 1) / 2);
+      };
+      video.onseeked = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth || 640;
+        canvas.height = video.videoHeight || 480;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/jpeg', 0.8));
+      };
+      video.onerror = reject;
+    });
+  }
+
+  async function transcribeAudio(blob) {
+    const url = 'https://api-inference.huggingface.co/models/openai/whisper-large-v3';
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + apiKey,
+        'Content-Type': blob.type || 'audio/mpeg'
+      },
+      body: blob
+    });
+
+    if (!res.ok) {
+      throw new Error('Audio transcription error ' + res.status);
+    }
+
+    const data = await res.json();
+    return data.text || '';
+  }
+
+  function showAttachmentChip(name, icon) {
+    document.getElementById('attachmentChipIcon').textContent = icon;
+    document.getElementById('attachmentChipName').textContent = name;
+    document.getElementById('attachmentChip').style.display = 'flex';
+  }
+
+  function clearAttachment() {
+    pendingAttachment = null;
+    document.getElementById('attachmentChip').style.display = 'none';
+    document.getElementById('fileInput').value = '';
+  }
+
+  function addImageBubbleUser(imageUrl, caption) {
+    const emptyState = document.getElementById('emptyState');
+    if (emptyState) emptyState.remove();
+
+    const chat = document.getElementById('chat');
+    const row = document.createElement('div');
+    row.className = 'row user';
+
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+
+    const img = document.createElement('img');
+    img.src = imageUrl;
+    img.style.width = '100%';
+    img.style.borderRadius = '10px';
+    img.style.display = 'block';
+    img.style.marginBottom = '6px';
+    bubble.appendChild(img);
+
+    const captionEl = document.createElement('div');
+    captionEl.textContent = caption;
+    bubble.appendChild(captionEl);
+
+    row.appendChild(bubble);
+    chat.appendChild(row);
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  // ---------------- Medical Mode ----------------
+  let medicalMode = false;
+
+  function toggleMedicalMode() {
+    medicalMode = !medicalMode;
+    const btn = document.getElementById('medicalBtn');
+    if (medicalMode) {
+      btn.classList.add('active-mode');
+      addBubble('ai', '🏥 Medical Mode ON hai. Main general health information de sakta hoon, lekin main doctor nahi hoon — koi diagnosis nahi dunga aur kisi bhi serious ya urgent cheez ke liye hamesha ek qualified doctor se consult karna. Ab apna sawal poocho.');
+    } else {
+      btn.classList.remove('active-mode');
+      addBubble('ai', '🏥 Medical Mode OFF ho gaya.');
+    }
+  }
+
+  // ---------------- Data Entry Quick Template ----------------
+  function insertDataEntryTemplate() {
+    const input = document.getElementById('textInput');
+    input.value = 'Neeche di gayi jankari ko ek clean, organized table (columns ke saath) mein arrange kar do:\n\n[yahan apna data/text paste karo, ya 📎 se file attach karo]';
+    autoGrow(input);
+    input.focus();
+  }
+
+  // ---------------- Animation Generator (multi-frame flipbook) ----------------
+  async function openAnimationPrompt() {
+    if (!apiKey) {
+      openSettings();
+      return;
+    }
+    const input = document.getElementById('textInput');
+    const prompt = input.value.trim();
+    if (!prompt) {
+      alert('Pehle box mein likho animation kis cheez ki chahiye, phir 🎞️ dabao.');
+      return;
+    }
+    input.value = '';
+    autoGrow(input);
+
+    addBubble('user', '🎞️ Animation: ' + prompt);
+    addTypingIndicator();
+
+    const frameCount = 4;
+    const frames = [];
+
+    try {
+      for (let i = 0; i < frameCount; i++) {
+        const framePrompt = prompt + ', animation frame ' + (i + 1) + ' of ' + frameCount + ', slight motion variation, consistent character and style';
+        const blob = await window.hfGenerateImage(framePrompt, apiKey);
+        frames.push(URL.createObjectURL(blob));
+      }
+      removeTypingIndicator();
+      addAnimationBubble(frames);
+    } catch (err) {
+      removeTypingIndicator();
+      addBubble('ai', '⚠️ Animation error: ' + err.message + ' (bade models free tier mein slow/limited ho sakte hain, thodi der mein phir try karo)');
+    }
+  }
+
+  function addAnimationBubble(frameUrls) {
+    const emptyState = document.getElementById('emptyState');
+    if (emptyState) emptyState.remove();
+
+    const chat = document.getElementById('chat');
+    const row = document.createElement('div');
+    row.className = 'row ai';
+
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    bubble.style.padding = '6px';
+
+    const img = document.createElement('img');
+    img.src = frameUrls[0];
+    img.style.width = '100%';
+    img.style.borderRadius = '12px';
+    img.style.display = 'block';
+    bubble.appendChild(img);
+
+    const note = document.createElement('div');
+    note.style.fontSize = '11px';
+    note.style.color = 'var(--ink-dim)';
+    note.style.marginTop = '6px';
+    note.textContent = frameUrls.length + ' frames loop ho rahe hain';
+    bubble.appendChild(note);
+
+    row.appendChild(bubble);
+    chat.appendChild(row);
+    chat.scrollTop = chat.scrollHeight;
+
+    let idx = 0;
+    setInterval(() => {
+      idx = (idx + 1) % frameUrls.length;
+      img.src = frameUrls[idx];
+    }, 500);
+  }
+
+  // ---------------- Video Generator ----------------
+  async function openVideoGenPrompt() {
+    if (!apiKey) {
+      openSettings();
+      return;
+    }
+    const input = document.getElementById('textInput');
+    const prompt = input.value.trim();
+    if (!prompt) {
+      alert('Pehle box mein likho video kis cheez ki chahiye, phir 🎬 dabao.');
+      return;
+    }
+    input.value = '';
+    autoGrow(input);
+
+    addBubble('user', '🎬 Video: ' + prompt);
+    addBubble('ai', '⏳ Video generate ho raha hai — ye 1-3 minute tak le sakta hai, free tier mein kabhi kabhi fail bhi ho sakta hai. Wait karo...');
+    addTypingIndicator();
+
+    try {
+      if (!window.hfGenerateVideo) {
+        throw new Error('Video module load nahi hua, phir try karo.');
+      }
+      const videoBlob = await window.hfGenerateVideo(prompt, apiKey);
+      removeTypingIndicator();
+      const videoUrl = URL.createObjectURL(videoBlob);
+      addVideoBubble(videoUrl);
+    } catch (err) {
+      removeTypingIndicator();
+      addBubble('ai', '⚠️ Video generation abhi fail ho gaya: ' + err.message + '. Ye feature free tier mein sabse zyada unreliable hai — agar baar-baar fail ho to abhi ke liye 🎞️ Animation Generator use karo, wo zyada reliably kaam karta hai.');
+    }
+  }
+
+  function addVideoBubble(videoUrl) {
+    const emptyState = document.getElementById('emptyState');
+    if (emptyState) emptyState.remove();
+
+    const chat = document.getElementById('chat');
+    const row = document.createElement('div');
+    row.className = 'row ai';
+
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    bubble.style.padding = '6px';
+
+    const video = document.createElement('video');
+    video.src = videoUrl;
+    video.controls = true;
+    video.autoplay = true;
+    video.loop = true;
+    video.style.width = '100%';
+    video.style.borderRadius = '12px';
+    bubble.appendChild(video);
+
+    row.appendChild(bubble);
+    chat.appendChild(row);
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  async function callLlama() {
+    const url = 'https://router.huggingface.co/v1/chat/completions';
+
+    const activeSystemPrompt = systemPrompt + (medicalMode ?
+      '\n\nMEDICAL MODE ACTIVE: The user is asking a health-related question. Give clear, general educational information only. Never diagnose. Never give specific medication dosages. Always end by advising the user to consult a qualified doctor for personal medical advice, especially for anything serious or urgent.' : '');
+
+    // Hugging Face router OpenAI-compatible format: system + user/assistant messages
+    const messages = [
+      { role: 'system', content: activeSystemPrompt },
+      ...conversationHistory.map(m => ({
+        role: m.role === 'user' ? 'user' : 'assistant',
+        content: m.text
+      }))
+    ];
+
+    const body = {
+      model: 'Qwen/Qwen2.5-72B-Instruct',
+      messages: messages,
+      max_tokens: 800
+    };
+
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + apiKey
+      },
+      body: JSON.stringify(body)
+    });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      if (res.status === 403) {
+        throw new Error('403 — access issue. Token permissions check karo (Inference Providers ON honi chahiye).');
+      }
+      throw new Error('API error ' + res.status + ' — token check karo ya settings dekho');
+    }
+
+    const data = await res.json();
+    return data.choices[0].message.content;
+  }
+
+  // ---------------- Voice/Video Call ----------------
+  let callActive = false;
+  let callRecognition = null;
+  let callMode = 'voice';
+  let cameraStream = null;
+
+  async function openCall(mode) {
+    if (!apiKey) {
+      openSettings();
+      return;
+    }
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      alert('Ye browser call feature support nahi karta. Chrome try karo, aur app ko https se host karo (file se mic kaam nahi karta).');
+      return;
+    }
+
+    callMode = mode;
+    callActive = true;
+
+    document.getElementById('callModeLabel').textContent = mode === 'video' ? 'Video Call' : 'Voice Call';
+    const avatarWrap = document.getElementById('avatarWrap');
+    const callOverlay = document.getElementById('callOverlay');
+    avatarWrap.className = 'avatar-wrap';
+    callOverlay.className = 'call-overlay open' + (mode === 'video' ? ' video-mode' : '');
+    document.getElementById('callTranscript').textContent = '';
+
+    if (mode === 'video') {
+      try {
+        cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        const videoEl = document.getElementById('callVideoFeed');
+        videoEl.srcObject = cameraStream;
+      } catch (e) {
+        alert('Camera access nahi mila. Permission allow karo aur https se app kholo.');
+      }
+    }
+
+    callListenLoop();
+  }
+
+  function stopCamera() {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(track => track.stop());
+      cameraStream = null;
+    }
+  }
+
+  function captureFrame() {
+    const video = document.getElementById('callVideoFeed');
+    const canvas = document.getElementById('callCanvas');
+    canvas.width = video.videoWidth || 640;
+    canvas.height = video.videoHeight || 480;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL('image/jpeg', 0.7);
+  }
+
+  function endCall() {
+    callActive = false;
+    if (callRecognition) {
+      try { callRecognition.stop(); } catch (e) {}
+    }
+    window.speechSynthesis.cancel();
+    stopCamera();
+    document.getElementById('callOverlay').classList.remove('open');
+    document.getElementById('avatarWrap').classList.remove('listening');
+    document.getElementById('avatarOrb').classList.remove('speaking');
+  }
+
+
+  // ---------------- Auto-detect language of AI's reply text for correct voice accent ----------------
+  function detectSpeechLang(text) {
+    // Script-based detection (works regardless of romanized spelling)
+    if (/[\u0600-\u06FF]/.test(text)) {
+      // Arabic script — could be Arabic, Urdu, Persian. Default to Urdu since that's this app's primary audience.
+      if (/[ےڑہٹڈ]/.test(text)) return 'ur-PK'; // Urdu-specific letters
+      return 'ar-SA';
+    }
+    if (/[\u0900-\u097F]/.test(text)) return 'hi-IN'; // Devanagari (Hindi)
+    if (/[\u0980-\u09FF]/.test(text)) return 'bn-BD'; // Bengali
+    if (/[\u0A00-\u0A7F]/.test(text)) return 'pa-IN'; // Gurmukhi (Punjabi)
+    if (/[\u4E00-\u9FFF]/.test(text)) return 'zh-CN'; // Chinese
+    if (/[\u3040-\u30FF]/.test(text)) return 'ja-JP'; // Japanese
+    if (/[\u0400-\u04FF]/.test(text)) return 'ru-RU'; // Cyrillic (Russian)
+
+    // Romanized Urdu/Hindi word detection (common words typed in English letters)
+    const t = ' ' + text.toLowerCase() + ' ';
+    const urduWords = [' hai ', ' hain ', ' aap ', ' kya ', ' kaise ', ' mein ', ' nahi ', ' acha ', ' shukriya ', ' bhai '];
+    if (urduWords.some(w => t.includes(w))) return 'ur-PK';
+
+    // Default fallback: use whatever the user selected in settings
+    return voiceLang;
+  }
+
+  function setCallStatus(text) {
+    document.getElementById('callStatus').textContent = text;
+  }
+
+  async function callVisionModel(userText, imageDataUrl) {
+    const url = 'https://router.huggingface.co/v1/chat/completions';
+
+    const messages = [
+      { role: 'system', content: systemPrompt },
+      {
+        role: 'user',
+        content: [
+          { type: 'text', text: userText },
+          { type: 'image_url', image_url: { url: imageDataUrl } }
+        ]
+      }
+    ];
+
+    const body = {
+      model: 'Qwen/Qwen2-VL-72B-Instruct',
+      messages: messages,
+      max_tokens: 500
+    };
+
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + apiKey
+      },
+      body: JSON.stringify(body)
+    });
+
+    if (!res.ok) {
+      throw new Error('Vision API error ' + res.status);
+    }
+
+    const data = await res.json();
+    return data.choices[0].message.content;
+  }
+
+  function callListenLoop() {
+    if (!callActive) return;
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    callRecognition = new SpeechRecognition();
+    callRecognition.lang = voiceLang;
+    callRecognition.interimResults = false;
+    callRecognition.maxAlternatives = 1;
+
+    setCallStatus('Sun raha hoon...');
+    document.getElementById('avatarWrap').classList.add('listening');
+
+    callRecognition.onresult = async (event) => {
+      const transcript = event.results[0][0].transcript;
+      if (!transcript || !transcript.trim()) {
+        callListenLoop();
+        return;
+      }
+
+      document.getElementById('avatarWrap').classList.remove('listening');
+      document.getElementById('callTranscript').textContent = '"' + transcript + '"';
+      setCallStatus('Soch raha hoon...');
+      if (callMode !== 'video') {
+        conversationHistory.push({ role: 'user', text: transcript });
+      }
+
+      try {
+        let reply;
+        if (callMode === 'video' && cameraStream) {
+          const frame = captureFrame();
+          reply = await callVisionModel(transcript, frame);
+        } else {
+          reply = await callLlama();
+          conversationHistory.push({ role: 'model', text: reply });
+        }
+
+        setCallStatus('Bol raha hoon...');
+        document.getElementById('avatarOrb').classList.add('speaking');
+        document.getElementById('callTranscript').textContent = reply;
+
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(reply);
+        utterance.lang = detectSpeechLang(reply);
+        utterance.onend = () => {
+          document.getElementById('avatarOrb').classList.remove('speaking');
+          if (callActive) callListenLoop();
+        };
+        window.speechSynthesis.speak(utterance);
+      } catch (err) {
+        setCallStatus('Error aayi, phir try kar raha hoon...');
+        if (callActive) setTimeout(callListenLoop, 1500);
+      }
+    };
+
+    callRecognition.onerror = (event) => {
+      if (event.error === 'no-speech' || event.error === 'aborted') {
+        if (callActive) callListenLoop();
+        return;
+      }
+      if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+        setCallStatus('⚠️ Mic access nahi mila — https se app kholo');
+        document.getElementById('callTranscript').textContent = 'Ye file seedha phone mein khol rahe ho to mic kaam nahi karega. Pehle app ko online host karo (GitHub Pages jaisa free tarika), phir try karo.';
+        return;
+      }
+      if (callActive) setTimeout(callListenLoop, 1000);
+    };
+
+    callRecognition.onend = () => {
+      // Agar result aane se pehle hi khatam ho gaya (silence timeout), phir se suno
+    };
+
+    try {
+      callRecognition.start();
+    } catch (e) {
+      if (callActive) setTimeout(callListenLoop, 1000);
+    }
+  }
+
+
+  function toggleMic() {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      alert('Ye browser voice input support nahi karta. Chrome try karo.');
+      return;
+    }
+
+    if (isRecording) {
+      recognition.stop();
+      return;
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = new SpeechRecognition();
+    recognition.lang = voiceLang;
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = () => {
+      isRecording = true;
+      document.getElementById('micBtn').classList.add('recording');
+    };
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      const input = document.getElementById('textInput');
+      input.value = transcript;
+      autoGrow(input);
+    };
+
+    recognition.onerror = () => {
+      isRecording = false;
+      document.getElementById('micBtn').classList.remove('recording');
+    };
+
+    recognition.onend = () => {
+      isRecording = false;
+      document.getElementById('micBtn').classList.remove('recording');
+    };
+
+    recognition.start();
+  }
+
+  // ---------------- Voice output (Text to Speech) ----------------
+  function speakText(text) {
+    if (!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = detectSpeechLang(text);
+    window.speechSynthesis.speak(utterance);
+  }
+
+  document.addEventListener('click', (e) => {
+    const menu = document.getElementById('attachMenu');
+    const btn = document.getElementById('attachBtn');
+    if (menu.style.display === 'flex' && !menu.contains(e.target) && e.target !== btn) {
+      menu.style.display = 'none';
+    }
+  });
+
+</script>
+
+</body>
+</html>
