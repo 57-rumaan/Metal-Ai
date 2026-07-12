@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
+
+<title>OmniAI</title>
+
+<link rel="stylesheet" href="style.css">
+
+<link rel="preconnect"
+href="https://fonts.googleapis.com">
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+rel="stylesheet">
+
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/highlight.js/lib/common.min.js"></script>
+
+<link
+rel="stylesheet"
+href="https://cdn.jsdelivr.net/npm/highlight.js/styles/github-dark.min.css">
+
+</head>
+
+<body>
+
+<div id="loading">
+
+<div class="loader"></div>
+
+<h2>OmniAI</h2>
+
+<p>Initializing AI...</p>
+
+</div>
+
+<div id="app">
+
+<aside id="sidebar">
+
+<div class="logo">
+
+🧠 OmniAI
+
+</div>
+
+<button id="newChat">
+
++ New Chat
+
+</button>
+
+<nav>
+
+<button class="nav active">
+
+💬 Chats
+
+</button>
+
+<button class="nav">
+
+🖼 Images
+
+</button>
+
+<button class="nav">
+
+🎥 Videos
+
+</button>
+
+<button class="nav">
+
+🎤 Voice
+
+</button>
+
+<button class="nav">
+
+📄 Files
+
+</button>
+
+<button class="nav">
+
+🌐 Search
+
+</button>
+
+<button class="nav">
+
+⚙ Settings
+
+</button>
+
+</nav>
+
+</aside>
+
+<main>
+
+<header>
+
+<h1>
+
+OmniAI
+
+</h1>
+
+<div class="status">
+
+🟢 Connected
+
+</div>
+
+</header>
+
+<section id="messages">
+
+<div class="assistant">
+
+<h3>
+
+Welcome 👋
+
+</h3>
+
+<p>
+
+How can I help you today?
+
+</p>
+
+</div>
+
+</section>
+
+<footer>
+
+<button>
+
+📎
+
+</button>
+
+<button>
+
+🎤
+
+</button>
+
+<button>
+
+🌐
+
+</button>
+
+<textarea
+id="prompt"
+placeholder="Message OmniAI..."
+></textarea>
+
+<button id="send">
+
+➤
+
+</button>
+
+</footer>
+
+</main>
+
+</div>
+
+<script src="config.js"></script>
+
+<script src="api.js"></script>
+
+<script src="app.js"></script>
+
+</body>
+
+</html>
